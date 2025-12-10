@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
+import { Link } from 'react-router-dom'
 import BorderBox from './UI/BorderBox'
 import InventoryGrid from './InventoryGrid'
 import { colorInitialToIndex } from '../utils/colors'
@@ -121,6 +122,9 @@ function InventoryPage({ squares, unlockedSizes, onToggleFavorite, onSave, saveS
             </div>
 
             <div className="actions">
+              <Link className="btn" to="/">
+                Back
+              </Link>
               <button
                 className="btn"
                 type="button"

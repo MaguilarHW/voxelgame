@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import { Link, Route, Routes, Navigate } from 'react-router-dom'
 import Generator from './components/Generator'
-import Inventory from './components/Inventory'
 import InventoryPage from './components/InventoryPage'
 import FeaturedSection from './components/FeaturedSection'
 import PedestalGrid from './components/PedestalGrid'
@@ -11,12 +10,14 @@ import BorderBox from './components/UI/BorderBox'
 import Login from './components/Login'
 import DebugPanel from './components/DebugPanel'
 import { useProgress } from './hooks/useProgress'
+import InventoryGrid from './components/InventoryGrid'
 import { useGenerator } from './hooks/useGenerator'
 import { useInventory } from './hooks/useInventory'
 import { useCollection } from './hooks/useCollection'
 import { useUpgrades } from './hooks/useUpgrades'
 import { useAuth } from './hooks/useAuth'
 import { palette } from './utils/colors'
+import { unpackBase64ToGrid } from './utils/compress'
 
 const COOLDOWN_MS = 7000
 const START_SIZE = 1
@@ -30,20 +31,12 @@ function App() {
     useAuth()
   const { loadProgress, saveProgress, loadingProgress, saveStatus, lastSavedAt } = useProgress({ user })
 
-  const { squares, featured, addSquare, setAllSquares } = useInventory({ userId: user?.uid })
+  const { squares, featured, addSquare, setAllSquares, toggleFavoriteBySignature } = useInventory({
+    userId: user?.uid,
+  })
+
   const onToggleFavorite = (sq) => {
-    const signature = `${sq.size}-${JSON.stringify(sq.grid)}`
-    const updated = squares.map((item) => {
-      const sigItem = `${item.size}-${JSON.stringify(item.grid)}`
-      if (sigItem === signature) {
-        return { ...item, favorite: !item.favorite }
-      }
-      return item
-    })
-    // local set via addSquare is not enough; use direct state setter by recreating squares in hook
-    // quick hack: append a no-op to trigger state update
-    addSquare({ ...sq, id: `${sq.id}-noop-${Date.now()}`, favorite: !sq.favorite })
-    // overwrite state directly through featured ref? Not available; we can rely on grouping to show favorite badge where any instance toggled
+    toggleFavoriteBySignature(sq.size, sq.grid)
   }
 
   const handleSave = () =>
@@ -85,20 +78,22 @@ function App() {
       }
       const restored = []
       ;(data?.featured ?? []).forEach((sq, idx) => {
+        if (!sq.grid || !sq.size) return
         restored.push({
           id: sq.id ?? `fav-${idx}`,
           size: sq.size,
-          grid: sq.gridDecoded ?? [],
+          grid: sq.grid ? unpackBase64ToGrid(sq.grid, sq.size) : [],
           favorite: true,
           shiny: sq.shiny,
           colors: sq.colors,
         })
       })
       ;(data?.pedestals ?? []).forEach((sq, idx) => {
+        if (!sq.grid || !sq.size) return
         restored.push({
           id: sq.id ?? `ped-${idx}`,
           size: sq.size,
-          grid: sq.gridDecoded ?? [],
+          grid: sq.grid ? unpackBase64ToGrid(sq.grid, sq.size) : [],
           favorite: sq.favorite ?? false,
           shiny: sq.shiny,
           colors: sq.colors,
@@ -210,8 +205,13 @@ function App() {
             </div>
 
             <div className="column">
-              <FeaturedSection squares={featured} />
-              <Inventory squares={squares} />
+              <FeaturedSection squares={featured} onToggleFavorite={onToggleFavorite} />
+              <BorderBox title="Recent (last 5)">
+                <InventoryGrid
+                  squares={squares.slice(0, 5)}
+                  onToggleFavorite={onToggleFavorite}
+                />
+              </BorderBox>
               <PedestalGrid pedestals={pedestals} size={size} />
             </div>
           </main>

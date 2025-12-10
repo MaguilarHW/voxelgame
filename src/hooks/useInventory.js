@@ -35,6 +35,19 @@ export const useInventory = ({ userId }) => {
   const addSquare = (sq) => setSquares((current) => [sq, ...current])
   const setAllSquares = (list) => setSquares(list)
 
+  const toggleFavoriteBySignature = (size, grid) => {
+    const signature = `${size}-${JSON.stringify(grid)}`
+    setSquares((current) =>
+      current.map((item) => {
+        const sigItem = `${item.size}-${JSON.stringify(item.grid)}`
+        if (sigItem === signature) {
+          return { ...item, favorite: !item.favorite }
+        }
+        return item
+      }),
+    )
+  }
+
   const featured = squares.filter((s) => s.favorite)
 
   return {
@@ -42,6 +55,7 @@ export const useInventory = ({ userId }) => {
     featured,
     addSquare,
     setAllSquares,
+    toggleFavoriteBySignature,
     loading,
   }
 }

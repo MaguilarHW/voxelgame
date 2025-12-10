@@ -8,6 +8,18 @@ export const useProgress = ({ user }) => {
   const [saveStatus, setSaveStatus] = useState('idle')
   const [lastSavedAt, setLastSavedAt] = useState(null)
 
+  const compressSquare = (sq) => {
+    if (!sq || !sq.grid || !Array.isArray(sq.grid) || !sq.grid.length || !sq.size) return null
+    return {
+      size: sq.size,
+      grid: packGridToBase64(sq.grid),
+      colors: sq.colors ?? [],
+      shiny: Boolean(sq.shiny),
+      favorite: Boolean(sq.favorite),
+      id: sq.id,
+    }
+  }
+
   const loadProgress = async () => {
     if (!user) return null
     setLoadingProgress(true)
@@ -45,27 +57,16 @@ export const useProgress = ({ user }) => {
         sizes[sq.size] = entry
       })
 
-    const favorites = squares.filter((s) => s.favorite)
-    const favoritesCompressed = favorites.map((sq) => ({
-      size: sq.size,
-      grid: packGridToBase64(sq.grid),
-      colors: sq.colors,
-      shiny: sq.shiny,
-      favorite: true,
-      id: sq.id,
-    }))
+    const favorites = squares.filter(
+      (s) => s.favorite && s.grid && Array.isArray(s.grid) && s.grid.length && s.size,
+    )
+    const favoritesCompressed = favorites.map(compressSquare).filter(Boolean)
 
     const pedestalCompressed = []
     squares.forEach((sq) => {
-      if (sq.isSolid) {
-        pedestalCompressed.push({
-          size: sq.size,
-          grid: packGridToBase64(sq.grid),
-          colors: sq.colors,
-          shiny: sq.shiny,
-          favorite: sq.favorite,
-          id: sq.id,
-        })
+      if (sq.isSolid && sq.grid && Array.isArray(sq.grid) && sq.grid.length && sq.size) {
+        const packed = compressSquare(sq)
+        if (packed) pedestalCompressed.push(packed)
       }
     })
 
@@ -84,6 +85,9 @@ export const useProgress = ({ user }) => {
       setSaveStatus('saved')
       setLastSavedAt(new Date().toISOString())
     } catch (err) {
+      // surface error for debugging
+      // eslint-disable-next-line no-console
+      console.error('Save failed', err)
       setSaveStatus('error')
     }
   }

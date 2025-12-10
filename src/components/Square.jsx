@@ -12,30 +12,35 @@ function Square({ grid, size, count, favorite, shiny, onToggleFavorite }) {
           {favorite ? '★' : '☆'}
         </button>
       </div>
-      <div
-        className="generator-grid"
-        style={{
-          gridTemplateColumns: `repeat(${size}, ${cellSize}px)`,
-          gridAutoRows: `${cellSize}px`,
-          lineHeight: '0',
-        }}
-      >
-        {grid.map((row, rIdx) =>
-          row.map((cell, cIdx) => (
-            <div
-              key={`${rIdx}-${cIdx}`}
-              className="square-cell"
-              style={{ background: palette[cell], width: `${cellSize}px`, height: `${cellSize}px`, aspectRatio: '1 / 1' }}
-              title={colorIndexToName(cell)}
-            />
-          )),
-        )}
-      </div>
-      <div className="square-meta">
-        <span>
+      <div className="square-body">
+        <div
+          className="generator-grid"
+          style={{
+            gridTemplateColumns: `repeat(${size}, ${cellSize}px)`,
+            gridAutoRows: `${cellSize}px`,
+            lineHeight: '0',
+          }}
+        >
+          {grid.map((row, rIdx) =>
+            row.map((cell, cIdx) => (
+              <div
+                key={`${rIdx}-${cIdx}`}
+                className="square-cell"
+                style={{
+                  background: palette[cell],
+                  width: `${cellSize}px`,
+                  height: `${cellSize}px`,
+                  aspectRatio: '1 / 1',
+                }}
+                title={colorIndexToName(cell)}
+              />
+            )),
+          )}
+        </div>
+        <div className="square-size-label">
           {size}x{size}
           {count > 1 ? ` (x${count})` : ''}
-        </span>
+        </div>
       </div>
     </div>
   )
