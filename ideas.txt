@@ -1,0 +1,3 @@
+puzzles that the user completes for boost where they fill in shapes w squares
+- penalties for more squares 
+- penalities for overlapping
